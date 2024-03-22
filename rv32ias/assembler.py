@@ -33,7 +33,7 @@ def preprocessor(asm_txt: str) -> str:
     return asm_txt
 
 
-def parse_asm_one(single_asm: str) -> Instruction:
+def __parse_asm_one(single_asm: str) -> Instruction:
     inst, args = single_asm.split(maxsplit=1)
 
     if inst not in inst_dict:
@@ -48,10 +48,10 @@ def parse_asm_one(single_asm: str) -> Instruction:
 
 
 def parse_asm(asm: str) -> List[Instruction]:
-    return [parse_asm_one(line) for line in asm.splitlines()]
+    return [__parse_asm_one(line) for line in asm.splitlines()]
 
 
-def _assemble_handle_type_r(instruction: Instruction) -> int:
+def __assemble_handle_type_r(instruction: Instruction) -> int:
     inst_def = inst_dict[instruction.inst]
 
     opcode = inst_def.opcode
@@ -65,7 +65,7 @@ def _assemble_handle_type_r(instruction: Instruction) -> int:
     return (funct7 << 25) | (rs2 << 20) | (rs1 << 15) | (funct3 << 12) | (rd << 7) | opcode
 
 
-def _assemble_handle_type_i(instruction: Instruction) -> int:
+def __assemble_handle_type_i(instruction: Instruction) -> int:
     inst_def = inst_dict[instruction.inst]
 
     opcode = inst_def.opcode
@@ -78,7 +78,7 @@ def _assemble_handle_type_i(instruction: Instruction) -> int:
     return (imm << 20) | (rs1 << 15) | (funct3 << 12) | (rd << 7) | opcode
 
 
-def _assemble_handle_type_sb(instruction: Instruction) -> int:
+def __assemble_handle_type_sb(instruction: Instruction) -> int:
     inst_def = inst_dict[instruction.inst]
 
     opcode = inst_def.opcode
@@ -98,7 +98,7 @@ def _assemble_handle_type_sb(instruction: Instruction) -> int:
     return (imm7 << 25) | (rs2 << 20) | (rs1 << 15) | (funct3 << 12) | (imm5 << 7) | opcode
 
 
-def _assemble_handle_type_uj(instruction: Instruction) -> int:
+def __assemble_handle_type_uj(instruction: Instruction) -> int:
     inst_def = inst_dict[instruction.inst]
 
     opcode = inst_def.opcode
@@ -118,22 +118,22 @@ def _assemble_handle_type_uj(instruction: Instruction) -> int:
     return (imm << 12) | (rd << 7) | opcode
 
 
-def assemble_instruction(instruction: Instruction) -> int:
+def __assemble_instruction(instruction: Instruction) -> int:
     match inst_dict[instruction.inst].inst_type:
         case InstType.R_:
-            return _assemble_handle_type_r(instruction)
+            return __assemble_handle_type_r(instruction)
         case InstType.I_:
-            return _assemble_handle_type_i(instruction)
+            return __assemble_handle_type_i(instruction)
         case InstType.S_ | InstType.B_:
-            return _assemble_handle_type_sb(instruction)
+            return __assemble_handle_type_sb(instruction)
         case InstType.U_ | InstType.J_:
-            return _assemble_handle_type_uj(instruction)
+            return __assemble_handle_type_uj(instruction)
         case _:
             raise ValueError(f'Instruction type not supported: {inst_dict[instruction.inst].inst_type}')
 
 
 def assemble_instructions(instructions: List[Instruction]) -> List[int]:
-    return [assemble_instruction(line) for line in instructions]
+    return [__assemble_instruction(line) for line in instructions]
 
 
 def assemble(asm_txt: str) -> List[int]:
