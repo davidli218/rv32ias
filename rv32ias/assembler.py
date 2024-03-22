@@ -20,7 +20,7 @@ class Instruction:
     imm: Optional[str] = None
 
 
-def preprocessor(asm_txt: str) -> str:
+def clean_asm_code(asm_txt: str) -> str:
     # Remove comments
     asm_txt = re.sub(r'#.*', '', asm_txt)
 
@@ -137,4 +137,4 @@ def assemble_instructions(instructions: List[Instruction]) -> List[int]:
 
 
 def assemble(asm_txt: str) -> List[int]:
-    return assemble_instructions(parse_asm(preprocessor(asm_txt)))
+    return assemble_instructions(parse_asm(clean_asm_code(asm_txt)))
