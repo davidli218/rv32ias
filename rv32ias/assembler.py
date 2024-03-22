@@ -12,6 +12,7 @@ inst_dict: Dict[str, InstDef] = {inst.inst: inst for inst in supported_instructi
 
 @dataclass
 class Instruction:
+    asm: str
     inst: str
     rd: Optional[str] = None
     rs1: Optional[str] = None
@@ -43,7 +44,7 @@ def parse_asm_one(single_asm: str) -> Instruction:
     if not match:
         raise ValueError(f'Invalid syntax for: line {single_asm}')
 
-    return Instruction(inst, **match.groupdict())
+    return Instruction(single_asm, inst, **match.groupdict())
 
 
 def parse_asm(asm: str) -> List[Instruction]:
