@@ -7,6 +7,14 @@ from rv32ias.isa import InstType
 from rv32ias.isa import reg_mapper
 from rv32ias.isa import supported_instructions
 
+__all__ = [
+    'Instruction',
+    'clean_asm_code',
+    'parse_asm',
+    'assemble_instructions',
+    'assemble'
+]
+
 inst_dict: Dict[str, InstDef] = {inst.inst: inst for inst in supported_instructions}
 
 
