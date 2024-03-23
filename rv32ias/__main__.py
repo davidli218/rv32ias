@@ -16,16 +16,14 @@ def main():
 
     try:
         asm = load_asm(args.asm_file)
-    except FileNotFoundError as e:
+        instructions = parse_asm(asm)
+
+        if args.verbose:
+            verbose_output(instructions)
+        else:
+            standard_output(instructions)
+    except Exception as e:
         print(e)
-        return
-
-    instructions = parse_asm(asm)
-
-    if args.verbose:
-        verbose_output(instructions)
-    else:
-        standard_output(instructions)
 
 
 def load_asm(asm_file: str) -> str:
