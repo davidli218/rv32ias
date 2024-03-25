@@ -1,76 +1,17 @@
-import re
-from dataclasses import dataclass
-from typing import List, Dict, Optional
+from typing import List
 
-from rv32ias.isa import InstDef
 from rv32ias.isa import InstType
 from rv32ias.isa import reg_mapper
-from rv32ias.isa import supported_instructions
+from rv32ias.isa import supported_inst_dict
+from rv32ias.models import Instruction
 
 __all__ = [
-    'Instruction',
-    'clean_asm_code',
-    'parse_asm',
     'assemble_instructions',
-    'assemble'
 ]
-
-inst_dict: Dict[str, InstDef] = {inst.inst: inst for inst in supported_instructions}
-
-
-@dataclass
-class Instruction:
-    asm: str
-    inst: str
-    rd: Optional[str] = None
-    rs1: Optional[str] = None
-    rs2: Optional[str] = None
-    imm: Optional[str] = None
-
-
-def clean_asm_code(asm_txt: str) -> str:
-    # Remove comments
-    asm_txt = re.sub(r'#.*', '', asm_txt)
-
-    # Remove empty lines
-    asm_txt = re.sub(r'\n+', '\n', asm_txt)
-
-    # Remove leading and trailing whitespaces
-    asm_txt = re.sub(r'^\s*|\s*$', '', asm_txt, flags=re.MULTILINE)
-
-    # Remove whitespaces around commas
-    asm_txt = re.sub(r'\s*,\s*', ', ', asm_txt)
-
-    # Remove whitespaces around parentheses
-    asm_txt = re.sub(r'\s*\(\s*', '(', asm_txt)
-    asm_txt = re.sub(r'\s*\)\s*', ')', asm_txt)
-
-    # Format instructions to 4 characters and lowercase
-    asm_txt = re.sub(r'^(\w+)\s*', lambda m: m.group(1).lower().ljust(5), asm_txt, flags=re.MULTILINE)
-
-    return asm_txt
-
-
-def __parse_asm_one(single_asm: str) -> Instruction:
-    inst, args = single_asm.split(maxsplit=1)
-
-    if inst not in inst_dict:
-        raise ValueError(f'Instruction "{inst}" not supported')
-
-    match = re.match(inst_dict[inst].inst_arg_re, args)
-
-    if not match:
-        raise ValueError(f'Invalid syntax for: line {single_asm}')
-
-    return Instruction(single_asm, inst, **match.groupdict())
-
-
-def parse_asm(asm: str) -> List[Instruction]:
-    return [__parse_asm_one(line) for line in asm.splitlines()]
 
 
 def __assemble_handle_type_r(instruction: Instruction) -> int:
-    inst_def = inst_dict[instruction.inst]
+    inst_def = supported_inst_dict[instruction.inst]
 
     opcode = inst_def.opcode
     funct3 = inst_def.funct3
@@ -84,7 +25,7 @@ def __assemble_handle_type_r(instruction: Instruction) -> int:
 
 
 def __assemble_handle_type_i(instruction: Instruction) -> int:
-    inst_def = inst_dict[instruction.inst]
+    inst_def = supported_inst_dict[instruction.inst]
 
     opcode = inst_def.opcode
     funct3 = inst_def.funct3
@@ -97,7 +38,7 @@ def __assemble_handle_type_i(instruction: Instruction) -> int:
 
 
 def __assemble_handle_type_sb(instruction: Instruction) -> int:
-    inst_def = inst_dict[instruction.inst]
+    inst_def = supported_inst_dict[instruction.inst]
 
     opcode = inst_def.opcode
     funct3 = inst_def.funct3
@@ -117,7 +58,7 @@ def __assemble_handle_type_sb(instruction: Instruction) -> int:
 
 
 def __assemble_handle_type_uj(instruction: Instruction) -> int:
-    inst_def = inst_dict[instruction.inst]
+    inst_def = supported_inst_dict[instruction.inst]
 
     opcode = inst_def.opcode
 
@@ -137,7 +78,7 @@ def __assemble_handle_type_uj(instruction: Instruction) -> int:
 
 
 def __assemble_instruction(instruction: Instruction) -> int:
-    match inst_dict[instruction.inst].inst_type:
+    match supported_inst_dict[instruction.inst].inst_type:
         case InstType.R_:
             return __assemble_handle_type_r(instruction)
         case InstType.I_:
@@ -147,12 +88,8 @@ def __assemble_instruction(instruction: Instruction) -> int:
         case InstType.U_ | InstType.J_:
             return __assemble_handle_type_uj(instruction)
         case _:
-            raise ValueError(f'Instruction type not supported: {inst_dict[instruction.inst].inst_type}')
+            raise ValueError(f'Instruction type not supported: {supported_inst_dict[instruction.inst].inst_type}')
 
 
 def assemble_instructions(instructions: List[Instruction]) -> List[int]:
     return [__assemble_instruction(line) for line in instructions]
-
-
-def assemble(asm_txt: str) -> List[int]:
-    return assemble_instructions(parse_asm(clean_asm_code(asm_txt)))

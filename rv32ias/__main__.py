@@ -2,10 +2,10 @@ import argparse
 from pathlib import Path
 from typing import List
 
-from rv32ias.assembler import Instruction
 from rv32ias.assembler import assemble_instructions
-from rv32ias.assembler import clean_asm_code
-from rv32ias.assembler import parse_asm
+from rv32ias.models import Instruction
+from rv32ias.preprocessor import clean_asm_code
+from rv32ias.preprocessor import parse_asm
 
 
 def main():
