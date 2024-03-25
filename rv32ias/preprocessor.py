@@ -1,5 +1,5 @@
 import re
-from typing import List
+from typing import List, Dict
 
 from rv32ias.isa import supported_inst_dict
 from rv32ias.models import Instruction
@@ -36,7 +36,7 @@ def clean_asm_code(asm_txt: str) -> str:
     return asm_txt
 
 
-def __parse_asm_one(single_asm: str) -> Instruction:
+def __parse_asm_one(single_asm: str, jump_targets: dict, pc: int) -> Instruction:
     inst, args = single_asm.split(maxsplit=1)
 
     if inst not in supported_inst_dict:
@@ -47,8 +47,44 @@ def __parse_asm_one(single_asm: str) -> Instruction:
     if not match:
         raise ValueError(f'Invalid syntax for: line {single_asm}')
 
-    return Instruction(single_asm, inst, **match.groupdict())
+    match_dict = match.groupdict()
+
+    if 'label' in match_dict:
+        label = match_dict['label']
+
+        if label.isdigit():
+            match_dict['imm'] = int(label)
+        elif label in jump_targets:
+            match_dict['imm'] = jump_targets[label] - pc
+        else:
+            raise ValueError(f'Undefined label: {label}')
+
+        match_dict.pop('label')
+
+    return Instruction(single_asm, inst, **match_dict)
 
 
-def parse_asm(asm: str) -> List[Instruction]:
-    return [__parse_asm_one(line) for line in asm.splitlines()]
+def parse_asm(asm_pure: str) -> (List[Instruction], Dict[str, int]):
+    asm_lines = asm_pure.splitlines()
+    jump_targets = {}
+
+    alc = 0
+    while True:
+        if alc >= len(asm_lines):
+            break
+
+        line = asm_lines[alc]
+
+        if re.match(r'^\w+:', line):
+            label = line.split(':')[0]
+
+            if label in jump_targets:
+                raise ValueError(f'Duplicate label: {label}')
+
+            jump_targets[label] = alc * 4
+            asm_lines.pop(alc)
+            alc -= 1
+
+        alc += 1
+
+    return [__parse_asm_one(line, jump_targets, i * 4) for i, line in enumerate(asm_lines)], jump_targets
