@@ -69,10 +69,7 @@ def parse_asm(asm_pure: str) -> (List[Instruction], Dict[str, int]):
     jump_targets = {}
 
     alc = 0
-    while True:
-        if alc >= len(asm_lines):
-            break
-
+    while alc < len(asm_lines):
         line = asm_lines[alc]
 
         if re.match(r'^\w+:', line):
