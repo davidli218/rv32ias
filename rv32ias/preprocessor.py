@@ -27,8 +27,11 @@ def clean_asm_code(asm_txt: str) -> str:
     asm_txt = re.sub(r'\s*\(\s*', '(', asm_txt)
     asm_txt = re.sub(r'\s*\)\s*', ')', asm_txt)
 
+    # Format labels to end with a colon
+    asm_txt = re.sub(r'^(\w+)\s*:', lambda m: m.group(1).lower() + ':', asm_txt, flags=re.MULTILINE)
+
     # Format instructions to 4 characters and lowercase
-    asm_txt = re.sub(r'^(\w+)\s*', lambda m: m.group(1).lower().ljust(5), asm_txt, flags=re.MULTILINE)
+    asm_txt = re.sub(r'^(\w+)\s+', lambda m: m.group(1).lower().ljust(5), asm_txt, flags=re.MULTILINE)
 
     return asm_txt
 
