@@ -7,7 +7,7 @@ This project provides an assembler for the RISC-V RV32I instruction set.
 ## Installation
 
 ```shell
-git clone git@github.com:davidli218/rv32ias.git
+pip install git+https://github.com/davidli218/rv32ias.git
 ```
 
 
@@ -17,7 +17,7 @@ git clone git@github.com:davidli218/rv32ias.git
 To assemble an assembly file into machine code, use the following command:
 
 ```shell
-python -m rv32ias code.asm
+rv32ias code.asm
 ```
 
 ### Options
@@ -30,7 +30,7 @@ python -m rv32ias code.asm
 ### Example
 
 ```
-❯ python -m rv32ias -v example.asm
+❯ rv32ias -v example.asm
 
   Addr    | Label |   Hex    |               Bin                |      Assembly      
 --------- | ----- | -------- | -------------------------------- | -------------------
