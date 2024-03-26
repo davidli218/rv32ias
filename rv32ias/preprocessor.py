@@ -25,7 +25,7 @@ def clean_asm_code(asm_txt: str) -> str:
 
     # Remove whitespaces around parentheses
     asm_txt = re.sub(r'\s*\(\s*', '(', asm_txt)
-    asm_txt = re.sub(r'\s*\)\s*', ')', asm_txt)
+    asm_txt = re.sub(r'\s*\)', ')', asm_txt)
 
     # Format labels to end with a colon
     asm_txt = re.sub(r'^(\w+)\s*:', lambda m: m.group(1).lower() + ':', asm_txt, flags=re.MULTILINE)
