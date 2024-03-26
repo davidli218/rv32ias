@@ -2,7 +2,7 @@ from typing import List
 
 from rv32ias.isa import InstType
 from rv32ias.isa import reg_mapper
-from rv32ias.isa import supported_inst_dict
+from rv32ias.isa import rv32i_inst_dict
 from rv32ias.models import Instruction
 
 __all__ = [
@@ -11,7 +11,7 @@ __all__ = [
 
 
 def __assemble_handle_type_r(instruction: Instruction) -> int:
-    inst_def = supported_inst_dict[instruction.inst]
+    inst_def = rv32i_inst_dict[instruction.inst]
 
     opcode = inst_def.opcode
     funct3 = inst_def.funct3
@@ -25,7 +25,7 @@ def __assemble_handle_type_r(instruction: Instruction) -> int:
 
 
 def __assemble_handle_type_i(instruction: Instruction) -> int:
-    inst_def = supported_inst_dict[instruction.inst]
+    inst_def = rv32i_inst_dict[instruction.inst]
 
     opcode = inst_def.opcode
     funct3 = inst_def.funct3
@@ -34,11 +34,14 @@ def __assemble_handle_type_i(instruction: Instruction) -> int:
     rs1 = reg_mapper(instruction.rs1)
     imm = int(instruction.imm) & 0xFFF
 
+    if inst_def.inst in ('slli', 'srli', 'srai'):
+        imm = (imm & 0b111111) | (inst_def.funct7 << 5)
+
     return (imm << 20) | (rs1 << 15) | (funct3 << 12) | (rd << 7) | opcode
 
 
 def __assemble_handle_type_sb(instruction: Instruction) -> int:
-    inst_def = supported_inst_dict[instruction.inst]
+    inst_def = rv32i_inst_dict[instruction.inst]
 
     opcode = inst_def.opcode
     funct3 = inst_def.funct3
@@ -58,7 +61,7 @@ def __assemble_handle_type_sb(instruction: Instruction) -> int:
 
 
 def __assemble_handle_type_uj(instruction: Instruction) -> int:
-    inst_def = supported_inst_dict[instruction.inst]
+    inst_def = rv32i_inst_dict[instruction.inst]
 
     opcode = inst_def.opcode
 
@@ -78,7 +81,7 @@ def __assemble_handle_type_uj(instruction: Instruction) -> int:
 
 
 def __assemble_instruction(instruction: Instruction) -> int:
-    match supported_inst_dict[instruction.inst].inst_type:
+    match rv32i_inst_dict[instruction.inst].inst_type:
         case InstType.R_:
             return __assemble_handle_type_r(instruction)
         case InstType.I_:
@@ -88,7 +91,7 @@ def __assemble_instruction(instruction: Instruction) -> int:
         case InstType.U_ | InstType.J_:
             return __assemble_handle_type_uj(instruction)
         case _:
-            raise ValueError(f'Instruction type not supported: {supported_inst_dict[instruction.inst].inst_type}')
+            raise ValueError(f'Instruction type not supported: {rv32i_inst_dict[instruction.inst].inst_type}')
 
 
 def assemble_instructions(instructions: List[Instruction]) -> List[int]:

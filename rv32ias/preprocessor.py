@@ -1,7 +1,7 @@
 import re
 from typing import List, Dict
 
-from rv32ias.isa import supported_inst_dict
+from rv32ias.isa import rv32i_inst_dict
 from rv32ias.models import Instruction
 
 __all__ = [
@@ -39,10 +39,10 @@ def clean_asm_code(asm_txt: str) -> str:
 def __parse_asm_one(single_asm: str, jump_targets: dict, pc: int) -> Instruction:
     inst, args = single_asm.split(maxsplit=1)
 
-    if inst not in supported_inst_dict:
+    if inst not in rv32i_inst_dict:
         raise ValueError(f'Instruction "{inst}" not supported')
 
-    match = re.match(supported_inst_dict[inst].inst_arg_re, args)
+    match = re.match(rv32i_inst_dict[inst].inst_arg_re, args)
 
     if not match:
         raise ValueError(f'Invalid syntax for: line {single_asm}')
