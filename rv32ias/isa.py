@@ -29,31 +29,31 @@ class InstDef:
 
 
 __inst_arg_structs = {
-    'rd_rs1_rs2': r'^(?P<rd>\w+)\s*,\s*(?P<rs1>\w+)\s*,\s*(?P<rs2>\w+)$',
-    'rd_rs1_imm': r'^(?P<rd>\w+)\s*,\s*(?P<rs1>\w+)\s*,\s*(?P<imm>-?\d+)$',
-    'rd_imm': r'^(?P<rd>\w+)\s*,\s*(?P<imm>-?\d+)$',
-    'rd_imm(rs1)': r'^(?P<rd>\w+)\s*,\s*(?P<imm>-?\d+)\s*\(\s*(?P<rs1>\w+)\s*\)$',
-    'rs2_imm(rs1)': r'^(?P<rs2>\w+)\s*,\s*(?P<imm>-?\d+)\s*\(\s*(?P<rs1>\w+)\s*\)$',
-    'rd_label': r'^(?P<rd>\w+)\s*,\s*(?P<label>\w+)$',
-    'rs1_rs2_label': r'^(?P<rs1>\w+)\s*,\s*(?P<rs2>\w+)\s*,\s*(?P<label>\w+)$',
-    'rd_rs1_label': r'^(?P<rd>\w+)\s*,\s*(?P<rs1>\w+)\s*,\s*(?P<label>\w+)$',
+    'rd_rs1_rs2': r'^(?P<rd>\w+)\s*,\s*(?P<rs1>\w+)\s*,\s*(?P<rs2>\w+)$',  # rd, rs1, rs2
+    'rd_rs1_imm': r'^(?P<rd>\w+)\s*,\s*(?P<rs1>\w+)\s*,\s*(?P<imm>-?\d+)$',  # rd, rs1, imm
+    'rd_imm': r'^(?P<rd>\w+)\s*,\s*(?P<imm>-?\d+)$',  # rd, imm
+    'rd_imm(rs1)': r'^(?P<rd>\w+)\s*,\s*(?P<imm>-?\d+)\s*\(\s*(?P<rs1>\w+)\s*\)$',  # rd, imm(rs1)
+    'rs2_imm(rs1)': r'^(?P<rs2>\w+)\s*,\s*(?P<imm>-?\d+)\s*\(\s*(?P<rs1>\w+)\s*\)$',  # rs2, imm(rs1)
+    'rd_label': r'^(?P<rd>\w+)\s*,\s*(?P<label>\w+)$',  # rd, label
+    'rs1_rs2_label': r'^(?P<rs1>\w+)\s*,\s*(?P<rs2>\w+)\s*,\s*(?P<label>\w+)$',  # rs1, rs2, label
+    'rd_rs1_label': r'^(?P<rd>\w+)\s*,\s*(?P<rs1>\w+)\s*,\s*(?P<label>\w+)$',  # rd, rs1, label
 }
 
 __supported_instructions = [
-    InstDef('add', InstType.R_, 0b0110011, 0x0, 0x00, __inst_arg_structs['rd_rs1_rs2']),  # add rd, rs1, rs2
-    InstDef('sub', InstType.R_, 0b0110011, 0x0, 0x20, __inst_arg_structs['rd_rs1_rs2']),  # sub rd, rs1, rs2
-    InstDef('or', InstType.R_, 0b0110011, 0x6, 0x00, __inst_arg_structs['rd_rs1_rs2']),  # or rd, rs1, rs2
-    InstDef('and', InstType.R_, 0b0110011, 0x7, 0x00, __inst_arg_structs['rd_rs1_rs2']),  # and rd, rs1, rs2
-    InstDef('slt', InstType.R_, 0b0110011, 0x2, 0x00, __inst_arg_structs['rd_rs1_rs2']),  # slt rd, rs1, rs2
-    InstDef('addi', InstType.I_, 0b0010011, 0x0, None, __inst_arg_structs['rd_rs1_imm']),  # addi rd, rs1, imm
-    InstDef('ori', InstType.I_, 0b0010011, 0x6, None, __inst_arg_structs['rd_rs1_imm']),  # ori rd, rs1, imm
-    InstDef('andi', InstType.I_, 0b0010011, 0x7, None, __inst_arg_structs['rd_rs1_imm']),  # andi rd, rs1, imm
-    InstDef('lw', InstType.I_, 0b0000011, 0x2, None, __inst_arg_structs['rd_imm(rs1)']),  # lw rd, imm(rs1)
-    InstDef('sw', InstType.S_, 0b0100011, 0x2, None, __inst_arg_structs['rs2_imm(rs1)']),  # sw rs2, imm(rs1)
-    InstDef('beq', InstType.B_, 0b1100011, 0x0, None, __inst_arg_structs['rs1_rs2_label']),  # beq rs1, rs2, label
-    InstDef('jal', InstType.J_, 0b1101111, None, None, __inst_arg_structs['rd_label']),  # jal rd, label
-    InstDef('jalr', InstType.I_, 0b1100111, 0x0, None, __inst_arg_structs['rd_rs1_label']),  # jalr rd, rs1, label
-    InstDef('lui', InstType.U_, 0b0110111, None, None, __inst_arg_structs['rd_imm']),  # lui rd, imm
+    InstDef('add', InstType.R_, 0b0110011, 0x0, 0x00, __inst_arg_structs['rd_rs1_rs2']),
+    InstDef('sub', InstType.R_, 0b0110011, 0x0, 0x20, __inst_arg_structs['rd_rs1_rs2']),
+    InstDef('or', InstType.R_, 0b0110011, 0x6, 0x00, __inst_arg_structs['rd_rs1_rs2']),
+    InstDef('and', InstType.R_, 0b0110011, 0x7, 0x00, __inst_arg_structs['rd_rs1_rs2']),
+    InstDef('slt', InstType.R_, 0b0110011, 0x2, 0x00, __inst_arg_structs['rd_rs1_rs2']),
+    InstDef('addi', InstType.I_, 0b0010011, 0x0, None, __inst_arg_structs['rd_rs1_imm']),
+    InstDef('ori', InstType.I_, 0b0010011, 0x6, None, __inst_arg_structs['rd_rs1_imm']),
+    InstDef('andi', InstType.I_, 0b0010011, 0x7, None, __inst_arg_structs['rd_rs1_imm']),
+    InstDef('lw', InstType.I_, 0b0000011, 0x2, None, __inst_arg_structs['rd_imm(rs1)']),
+    InstDef('sw', InstType.S_, 0b0100011, 0x2, None, __inst_arg_structs['rs2_imm(rs1)']),
+    InstDef('beq', InstType.B_, 0b1100011, 0x0, None, __inst_arg_structs['rs1_rs2_label']),
+    InstDef('jal', InstType.J_, 0b1101111, None, None, __inst_arg_structs['rd_label']),
+    InstDef('jalr', InstType.I_, 0b1100111, 0x0, None, __inst_arg_structs['rd_rs1_label']),
+    InstDef('lui', InstType.U_, 0b0110111, None, None, __inst_arg_structs['rd_imm']),
 ]
 
 supported_inst_dict: Dict[str, InstDef] = {inst.inst: inst for inst in __supported_instructions}
