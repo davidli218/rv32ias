@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rv32ias"
+description = "Assembler for RISC-V RV32I instruction set"
+requires-python = ">=3.11"
+authors = [
+    { name = "Teii Ri", email = "teiiri@outlook.com" },
+]
+readme = "README.md"
+keywords = ["assembler", "risc-v", "rv32i"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Assemblers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dynamic = ["version"]
+
+[tool.setuptools.dynamic]
+version = { attr = "rv32ias.__version__" }
+
+[project.scripts]
+rv32ias = "rv32ias.__main__:main"
