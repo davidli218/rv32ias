@@ -29,7 +29,7 @@ class AsmParser:
         self.__validate_registers()
 
     def __build_err_context(self, raw_index: int) -> (int, str):
-        if raw_index == 1:
+        if raw_index == 0:
             code_begin_index = 0
             error_line = 0
         elif raw_index == len(self.__asm_raw_lines) - 1:
