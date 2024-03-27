@@ -34,9 +34,9 @@ __inst_arg_structs = {
     'rd_imm': r'^(?P<rd>\w+)\s*,\s*(?P<imm>-?\d+)$',  # rd, imm
     'rd_imm(rs1)': r'^(?P<rd>\w+)\s*,\s*(?P<imm>-?\d+)\s*\(\s*(?P<rs1>\w+)\s*\)$',  # rd, imm(rs1)
     'rs2_imm(rs1)': r'^(?P<rs2>\w+)\s*,\s*(?P<imm>-?\d+)\s*\(\s*(?P<rs1>\w+)\s*\)$',  # rs2, imm(rs1)
-    'rd_label': r'^(?P<rd>\w+)\s*,\s*(?P<label>\w+)$',  # rd, label
-    'rs1_rs2_label': r'^(?P<rs1>\w+)\s*,\s*(?P<rs2>\w+)\s*,\s*(?P<label>\w+)$',  # rs1, rs2, label
-    'rd_rs1_label': r'^(?P<rd>\w+)\s*,\s*(?P<rs1>\w+)\s*,\s*(?P<label>\w+)$',  # rd, rs1, label
+    'rd_label': r'^(?P<rd>\w+)\s*,\s*(?P<label>[\w-]+)$',  # rd, label
+    'rs1_rs2_label': r'^(?P<rs1>\w+)\s*,\s*(?P<rs2>\w+)\s*,\s*(?P<label>[\w-]+)$',  # rs1, rs2, label
+    'rd_rs1_label': r'^(?P<rd>\w+)\s*,\s*(?P<rs1>\w+)\s*,\s*(?P<label>[\w-]+)$',  # rd, rs1, label
 }
 
 __rv32i_instructions = [
