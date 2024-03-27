@@ -3,9 +3,13 @@ from pathlib import Path
 from typing import List, Dict
 
 from rv32ias.assembler import assemble_instructions
+from rv32ias.exceptions import AsmDuplicateLabelError
+from rv32ias.exceptions import AsmInvalidInstructionError
+from rv32ias.exceptions import AsmInvalidRegisterError
+from rv32ias.exceptions import AsmInvalidSyntaxError
+from rv32ias.exceptions import AsmUndefinedLabelError
 from rv32ias.models import Instruction
-from rv32ias.preprocessor import clean_asm_code
-from rv32ias.preprocessor import parse_asm
+from rv32ias.preprocessor import AsmParser
 
 
 def main():
@@ -16,14 +20,26 @@ def main():
 
     try:
         asm = load_asm(args.asm_file)
-        instructions, targets = parse_asm(asm)
-
-        if args.verbose:
-            verbose_output(instructions, targets)
-        else:
-            standard_output(instructions)
-    except Exception as e:
+    except FileNotFoundError as e:
         print(e)
+        return
+
+    try:
+        asm_parser = AsmParser(asm)
+    except (
+            AsmDuplicateLabelError,
+            AsmInvalidInstructionError,
+            AsmInvalidRegisterError,
+            AsmInvalidSyntaxError,
+            AsmUndefinedLabelError
+    ) as e:
+        print(e)
+        return
+
+    if args.verbose:
+        verbose_output(asm_parser.instructions, asm_parser.jump_table)
+    else:
+        standard_output(asm_parser.instructions)
 
 
 def load_asm(asm_file: str) -> str:
@@ -31,7 +47,7 @@ def load_asm(asm_file: str) -> str:
         raise FileNotFoundError(f'Error: File {asm_file} does not exist')
 
     with open(asm_file, 'r') as f:
-        return clean_asm_code(f.read())
+        return f.read()
 
 
 def standard_output(instructions: List[Instruction]) -> None:

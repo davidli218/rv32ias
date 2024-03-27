@@ -1,87 +1,150 @@
 import re
-from typing import List, Dict
+from typing import List, Dict, Final
 
+from rv32ias.exceptions import AsmDuplicateLabelError
+from rv32ias.exceptions import AsmInvalidInstructionError
+from rv32ias.exceptions import AsmInvalidRegisterError
+from rv32ias.exceptions import AsmInvalidSyntaxError
+from rv32ias.exceptions import AsmUndefinedLabelError
+from rv32ias.isa import reg_mapper
 from rv32ias.isa import rv32i_inst_dict
 from rv32ias.models import Instruction
 
 __all__ = [
-    'clean_asm_code',
-    'parse_asm'
+    'AsmParser',
 ]
 
 
-def clean_asm_code(asm_txt: str) -> str:
-    # Remove comments
-    asm_txt = re.sub(r'#.*', '', asm_txt)
+class AsmParser:
+    def __init__(self, asm_raw: str):
+        self.__asm_raw_lines: Final[List[str]] = asm_raw.split('\n')
 
-    # Remove empty lines
-    asm_txt = re.sub(r'\n+', '\n', asm_txt)
+        self.__jump_targets: Dict[str, int] = {}
+        self.__asm_clean_lines: List[str] = []
+        self.__asm_clean_lines_raw_index: List[int] = []
+        self.__parsed_instructions: List[Instruction] = []
 
-    # Remove leading and trailing whitespaces
-    asm_txt = re.sub(r'^\s*|\s*$', '', asm_txt, flags=re.MULTILINE)
+        self.__do_preprocess()
+        self.__parse_asm()
+        self.__validate_registers()
 
-    # Remove whitespaces around commas
-    asm_txt = re.sub(r'\s*,\s*', ', ', asm_txt)
-
-    # Remove whitespaces around parentheses
-    asm_txt = re.sub(r'\s*\(\s*', '(', asm_txt)
-    asm_txt = re.sub(r'\s*\)', ')', asm_txt)
-
-    # Format labels to end with a colon
-    asm_txt = re.sub(r'^(\w+)\s*:', lambda m: m.group(1).lower() + ':', asm_txt, flags=re.MULTILINE)
-
-    # Format instructions to 4 characters and lowercase
-    asm_txt = re.sub(r'^(\w+)\s+', lambda m: m.group(1).lower().ljust(5), asm_txt, flags=re.MULTILINE)
-
-    return asm_txt
-
-
-def __parse_asm_one(single_asm: str, jump_targets: dict, pc: int) -> Instruction:
-    inst, args = single_asm.split(maxsplit=1)
-
-    if inst not in rv32i_inst_dict:
-        raise ValueError(f'Instruction "{inst}" not supported')
-
-    match = re.match(rv32i_inst_dict[inst].inst_arg_re, args)
-
-    if not match:
-        raise ValueError(f'Invalid syntax for: line {single_asm}')
-
-    match_dict = match.groupdict()
-
-    if 'label' in match_dict:
-        label = match_dict['label']
-
-        if label.isdigit():
-            match_dict['imm'] = int(label)
-        elif label in jump_targets:
-            match_dict['imm'] = jump_targets[label] - pc
+    def __build_err_context(self, raw_index: int) -> (int, str):
+        if raw_index == 1:
+            code_begin_index = 0
+            error_line = 0
+        elif raw_index == len(self.__asm_raw_lines) - 1:
+            code_begin_index = len(self.__asm_raw_lines) - 3
+            error_line = 2
         else:
-            raise ValueError(f'Undefined label: {label}')
+            code_begin_index = raw_index - 1
+            error_line = 1
 
-        match_dict.pop('label')
+        code_space = ''
+        for i, code in enumerate(self.__asm_raw_lines[code_begin_index:code_begin_index + 3]):
+            label = f"{'err!' if i == error_line else str(code_begin_index + i)}"
+            code_space += f'{label:^6} -> {code}\n'
 
-    return Instruction(single_asm, inst, **match_dict)
+        return raw_index, code_space[:-1]
 
+    def __do_preprocess(self) -> None:
+        for i, line in enumerate(self.__asm_raw_lines):
+            # Remove comments
+            line = re.sub(r'#.*', '', line)
 
-def parse_asm(asm_pure: str) -> (List[Instruction], Dict[str, int]):
-    asm_lines = asm_pure.splitlines()
-    jump_targets = {}
+            # Remove leading and trailing whitespaces
+            line = re.sub(r'^\s*|\s*$', '', line)
 
-    alc = 0
-    while alc < len(asm_lines):
-        line = asm_lines[alc]
+            # If line is comment or empty, skip
+            if not line:
+                continue
 
-        if re.match(r'^\w+:', line):
-            label = line.split(':')[0]
+            # If line is label, add to jump_targets
+            if ':' in line:
+                re_match = re.match(r'^(?P<label>\w+)\s*:', line)
 
-            if label in jump_targets:
-                raise ValueError(f'Duplicate label: {label}')
+                if re_match is None:
+                    raise AsmInvalidSyntaxError(*self.__build_err_context(i))
 
-            jump_targets[label] = alc * 4
-            asm_lines.pop(alc)
-            alc -= 1
+                label = re_match.group('label')
 
-        alc += 1
+                if label[0].isdigit():
+                    raise AsmInvalidSyntaxError(*self.__build_err_context(i))
 
-    return [__parse_asm_one(line, jump_targets, i * 4) for i, line in enumerate(asm_lines)], jump_targets
+                if label in self.__jump_targets:
+                    raise AsmDuplicateLabelError(*self.__build_err_context(i))
+
+                self.__jump_targets[label] = 4 * len(self.__asm_clean_lines)
+                continue
+
+            # Remove whitespaces around commas
+            line = re.sub(r'\s*,\s*', ', ', line)
+
+            # Remove whitespaces around parentheses
+            line = re.sub(r'\s*\(\s*', '(', line)
+            line = re.sub(r'\s*\)', ')', line)
+
+            self.__asm_clean_lines.append(line)
+            self.__asm_clean_lines_raw_index.append(i)
+
+    def __parse_asm(self) -> None:
+        for i, line in enumerate(self.__asm_clean_lines):
+            inst, args = line.split(maxsplit=1)
+            raw_index = self.__asm_clean_lines_raw_index[i]
+
+            if inst not in rv32i_inst_dict:
+                raise AsmInvalidInstructionError(*self.__build_err_context(raw_index))
+
+            re_match = re.match(rv32i_inst_dict[inst].inst_arg_re, args)
+
+            if re_match is None:
+                raise AsmInvalidSyntaxError(*self.__build_err_context(raw_index))
+
+            args_dict = re_match.groupdict()
+
+            if 'label' in args_dict:
+                label = args_dict['label']
+
+                if label.isdigit():
+                    args_dict['imm'] = int(label)
+                elif label in self.__jump_targets:
+                    args_dict['imm'] = self.__jump_targets[label] - 4 * i
+                else:
+                    raise AsmUndefinedLabelError(*self.__build_err_context(raw_index))
+
+                args_dict.pop('label')
+
+            self.__parsed_instructions.append(Instruction(line, inst, **args_dict))
+
+    def __validate_registers(self) -> None:
+        for i, inst in enumerate(self.__parsed_instructions):
+            raw_index = self.__asm_clean_lines_raw_index[i]
+            try:
+                reg_mapper(inst.rd if inst.rd is not None else 'zero')
+                reg_mapper(inst.rs1 if inst.rs1 is not None else 'zero')
+                reg_mapper(inst.rs2 if inst.rs2 is not None else 'zero')
+            except ValueError:
+                raise AsmInvalidRegisterError(*self.__build_err_context(raw_index))
+
+    @property
+    def asm_raw(self) -> str:
+        return '\n'.join(self.__asm_raw_lines)
+
+    @property
+    def asm_clean(self) -> str:
+        output = []
+
+        for line in self.__asm_clean_lines:
+            if ':' in line:
+                output.append(f'{line}')
+            else:
+                output.append(f'    {line}')
+
+        return '\n'.join(output)
+
+    @property
+    def jump_table(self) -> Dict[str, int]:
+        return self.__jump_targets
+
+    @property
+    def instructions(self) -> List[Instruction]:
+        return self.__parsed_instructions
