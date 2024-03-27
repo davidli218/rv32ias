@@ -90,8 +90,6 @@ def __assemble_instruction(instruction: Instruction) -> int:
             return __assemble_handle_type_sb(instruction)
         case InstType.U_ | InstType.J_:
             return __assemble_handle_type_uj(instruction)
-        case _:
-            raise ValueError(f'Instruction type not supported: {rv32i_inst_dict[instruction.inst].inst_type}')
 
 
 def assemble_instructions(instructions: List[Instruction]) -> List[int]:
