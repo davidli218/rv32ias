@@ -88,6 +88,9 @@ class AsmParser:
 
     def __parse_asm(self) -> None:
         for i, line in enumerate(self.__asm_clean_lines):
+            if ' ' not in line:
+                raise AsmInvalidSyntaxError(*self.__build_err_context(self.__asm_clean_lines_raw_index[i]))
+
             inst, args = line.split(maxsplit=1)
             raw_index = self.__asm_clean_lines_raw_index[i]
 
