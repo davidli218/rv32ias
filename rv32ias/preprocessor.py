@@ -108,6 +108,13 @@ class AsmParser:
 
             args_dict = re_match.groupdict()
 
+            # Handle immediate
+            if 'imm' in args_dict:
+                try:
+                    args_dict['imm'] = int(args_dict['imm'], 0)
+                except ValueError:
+                    raise AsmInvalidSyntaxError(*self.__build_err_context(raw_index))
+
             # Handle label
             if 'label' in args_dict:
                 if (label := args_dict.pop('label')) in self.__jump_targets:

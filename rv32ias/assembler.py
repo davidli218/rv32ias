@@ -32,7 +32,7 @@ def __assemble_handle_type_i(instruction: Instruction) -> int:
 
     rd = reg_mapper(instruction.rd)
     rs1 = reg_mapper(instruction.rs1)
-    imm = int(instruction.imm) & 0xFFF
+    imm = instruction.imm & 0xFFF
 
     if inst_def.inst in ('slli', 'srli', 'srai'):
         imm = (imm & 0b111111) | (inst_def.funct7 << 5)
@@ -48,7 +48,7 @@ def __assemble_handle_type_sb(instruction: Instruction) -> int:
 
     rs1 = reg_mapper(instruction.rs1)
     rs2 = reg_mapper(instruction.rs2)
-    imm = int(instruction.imm)
+    imm = instruction.imm
 
     if inst_def.inst_type == InstType.S_:
         imm7 = (imm & (0b1111111 << 5)) >> 5
@@ -66,7 +66,7 @@ def __assemble_handle_type_uj(instruction: Instruction) -> int:
     opcode = inst_def.opcode
 
     rd = reg_mapper(instruction.rd)
-    imm = int(instruction.imm)
+    imm = instruction.imm
 
     if inst_def.inst_type == InstType.J_:
         imm20 = (imm & (0b1 << 20)) >> 20

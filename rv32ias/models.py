@@ -9,4 +9,4 @@ class Instruction:
     rd: Optional[str] = None
     rs1: Optional[str] = None
     rs2: Optional[str] = None
-    imm: Optional[str] = None
+    imm: Optional[int] = None
