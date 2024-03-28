@@ -75,7 +75,7 @@ def __assemble_handle_type_uj(instruction: Instruction) -> int:
         imm19_12 = (imm & (0b11111111 << 12)) >> 12
         imm = (imm20 << 19) | (imm10_1 << 9) | (imm11 << 8) | (imm19_12 << 0)
     else:
-        imm = imm & 0xFFFFF000
+        imm = imm & 0xFFFFF
 
     return (imm << 12) | (rd << 7) | opcode
 
