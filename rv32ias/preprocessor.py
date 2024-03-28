@@ -41,10 +41,10 @@ class AsmParser:
 
         code_space = ''
         for i, code in enumerate(self.__asm_raw_lines[code_begin_index:code_begin_index + 3]):
-            label = f"{'err!' if i == error_line else str(code_begin_index + i)}"
+            label = f"{'err!' if i == error_line else str(code_begin_index + i + 1)}"
             code_space += f'{label:^6} -> {code}\n'
 
-        return raw_index, code_space[:-1]
+        return raw_index + 1, code_space[:-1]
 
     def __do_preprocess(self) -> None:
         for i, line in enumerate(self.__asm_raw_lines):
