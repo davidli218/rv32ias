@@ -88,31 +88,32 @@ class AsmParser:
 
     def __parse_asm(self) -> None:
         for i, line in enumerate(self.__asm_clean_lines):
-            if ' ' not in line:
-                raise AsmInvalidSyntaxError(*self.__build_err_context(self.__asm_clean_lines_raw_index[i]))
-
-            inst, args = line.split(maxsplit=1)
             raw_index = self.__asm_clean_lines_raw_index[i]
 
+            # ! Raise when only one word in line
+            try:
+                inst, args = line.split(maxsplit=1)
+            except ValueError:
+                raise AsmInvalidSyntaxError(*self.__build_err_context(raw_index))
+
+            # ! Raise when instruction not in RV32I Instruction Dictionary
             if inst not in rv32i_inst_dict:
                 raise AsmInvalidInstructionError(*self.__build_err_context(raw_index))
 
             re_match = re.match(rv32i_inst_dict[inst].inst_arg_re, args)
 
+            # ! Raise when instruction arguments not match
             if re_match is None:
                 raise AsmInvalidSyntaxError(*self.__build_err_context(raw_index))
 
             args_dict = re_match.groupdict()
 
+            # Handle label
             if 'label' in args_dict:
-                label = args_dict['label']
-
-                if label in self.__jump_targets:
+                if (label := args_dict.pop('label')) in self.__jump_targets:
                     args_dict['imm'] = self.__jump_targets[label] - 4 * i
                 else:
                     raise AsmUndefinedLabelError(*self.__build_err_context(raw_index))
-
-                args_dict.pop('label')
 
             self.__parsed_instructions.append(Instruction(line, inst, **args_dict))
 
