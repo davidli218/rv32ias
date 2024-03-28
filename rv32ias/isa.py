@@ -88,7 +88,7 @@ __rv32i_instructions = [
     InstDef('bgeu', InstType.B_, 0b1100011, 0x7, None, __inst_arg_structs['rs1_rs2_label']),
     # Group 6: Jump instructions [0b1101111/0b1100111]
     InstDef('jal', InstType.J_, 0b1101111, None, None, __inst_arg_structs['rd_label']),
-    InstDef('jalr', InstType.I_, 0b1100111, 0x0, None, __inst_arg_structs['rd_rs1_label']),
+    InstDef('jalr', InstType.I_, 0b1100111, 0x0, None, __inst_arg_structs['rd_imm(rs1)']),
     # Group 7: Load upper immediate instructions [0b0110111]
     InstDef('lui', InstType.U_, 0b0110111, None, None, __inst_arg_structs['rd_imm']),
 ]
