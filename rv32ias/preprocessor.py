@@ -107,9 +107,7 @@ class AsmParser:
             if 'label' in args_dict:
                 label = args_dict['label']
 
-                if self.__str_is_int(label):
-                    args_dict['imm'] = int(label)
-                elif label in self.__jump_targets:
+                if label in self.__jump_targets:
                     args_dict['imm'] = self.__jump_targets[label] - 4 * i
                 else:
                     raise AsmUndefinedLabelError(*self.__build_err_context(raw_index))
@@ -127,14 +125,6 @@ class AsmParser:
                 reg_mapper(inst.rs2 if inst.rs2 is not None else 'zero')
             except ValueError:
                 raise AsmInvalidRegisterError(*self.__build_err_context(raw_index))
-
-    @staticmethod
-    def __str_is_int(s: str) -> bool:
-        try:
-            int(s)
-        except ValueError:
-            return False
-        return True
 
     @property
     def asm_raw(self) -> str:
