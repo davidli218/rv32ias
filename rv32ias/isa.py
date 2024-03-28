@@ -28,15 +28,23 @@ class InstDef:
     inst_arg_re: str
 
 
+__arg_re = {
+    'rd': r'(?P<rd>\w+)',
+    'rs1': r'(?P<rs1>\w+)',
+    'rs2': r'(?P<rs2>\w+)',
+    'imm': r'(?P<imm>-?\w+)',
+    'label': r'(?P<label>\w+)',
+}
+
 __inst_arg_structs = {
-    'rd_rs1_rs2': r'^(?P<rd>\w+)\s*,\s*(?P<rs1>\w+)\s*,\s*(?P<rs2>\w+)$',  # rd, rs1, rs2
-    'rd_rs1_imm': r'^(?P<rd>\w+)\s*,\s*(?P<rs1>\w+)\s*,\s*(?P<imm>-?\d+)$',  # rd, rs1, imm
-    'rd_imm': r'^(?P<rd>\w+)\s*,\s*(?P<imm>-?\d+)$',  # rd, imm
-    'rd_imm(rs1)': r'^(?P<rd>\w+)\s*,\s*(?P<imm>-?\d+)\s*\(\s*(?P<rs1>\w+)\s*\)$',  # rd, imm(rs1)
-    'rs2_imm(rs1)': r'^(?P<rs2>\w+)\s*,\s*(?P<imm>-?\d+)\s*\(\s*(?P<rs1>\w+)\s*\)$',  # rs2, imm(rs1)
-    'rd_label': r'^(?P<rd>\w+)\s*,\s*(?P<label>[\w-]+)$',  # rd, label
-    'rs1_rs2_label': r'^(?P<rs1>\w+)\s*,\s*(?P<rs2>\w+)\s*,\s*(?P<label>[\w-]+)$',  # rs1, rs2, label
-    'rd_rs1_label': r'^(?P<rd>\w+)\s*,\s*(?P<rs1>\w+)\s*,\s*(?P<label>[\w-]+)$',  # rd, rs1, label
+    'rd_rs1_rs2': rf'^{__arg_re["rd"]}\s*,\s*{__arg_re["rs1"]}\s*,\s*{__arg_re["rs2"]}$',
+    'rd_rs1_imm': rf'^{__arg_re["rd"]}\s*,\s*{__arg_re["rs1"]}\s*,\s*{__arg_re["imm"]}$',
+    'rd_imm': rf'^{__arg_re["rd"]}\s*,\s*{__arg_re["imm"]}$',
+    'rd_imm(rs1)': rf'^{__arg_re["rd"]}\s*,\s*{__arg_re["imm"]}\({__arg_re["rs1"]}\)$',
+    'rs2_imm(rs1)': rf'^{__arg_re["rs2"]}\s*,\s*{__arg_re["imm"]}\({__arg_re["rs1"]}\)$',
+    'rd_label': rf'^{__arg_re["rd"]}\s*,\s*{__arg_re["label"]}$',
+    'rs1_rs2_label': rf'^{__arg_re["rs1"]}\s*,\s*{__arg_re["rs2"]}\s*,\s*{__arg_re["label"]}$',
+    'rd_rs1_label': rf'^{__arg_re["rd"]}\s*,\s*{__arg_re["rs1"]}\s*,\s*{__arg_re["label"]}$',
 }
 
 __rv32i_instructions = [
