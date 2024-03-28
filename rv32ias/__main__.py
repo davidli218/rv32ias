@@ -69,7 +69,7 @@ def verbose_output(instructions: List[Instruction], targets: Dict[str, int]) -> 
     print(f"{'-' * 9} | {'-' * max_tgt_length} | {'-' * 8} | {'-' * 32} | {'-' * max_asm_length}")
     for i, instruction, machine_code in zip(range(len(instructions)), instructions, machine_codes):
         print(
-            f'+{i * 4:08X} | {add2label.get(i * 4, ""):^{max_tgt_length}} |'
+            f'+{i * 4:08} | {add2label.get(i * 4, ""):^{max_tgt_length}} |'
             f' {machine_code:08X} | {machine_code:032b} | {instruction.asm}'
         )
 
