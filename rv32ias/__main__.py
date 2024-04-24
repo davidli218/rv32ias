@@ -1,13 +1,8 @@
 import argparse
-from pathlib import Path
 from typing import List, Dict
 
 from rv32ias.assembler import assemble_instructions
-from rv32ias.exceptions import AsmDuplicateLabelError
-from rv32ias.exceptions import AsmInvalidInstructionError
-from rv32ias.exceptions import AsmInvalidRegisterError
-from rv32ias.exceptions import AsmInvalidSyntaxError
-from rv32ias.exceptions import AsmUndefinedLabelError
+from rv32ias.exceptions import AsmParseError
 from rv32ias.models import Instruction
 from rv32ias.preprocessor import AsmParser
 
@@ -19,35 +14,26 @@ def main():
     args = parser.parse_args()
 
     try:
-        asm = load_asm(args.asm_file)
-    except FileNotFoundError as e:
+        raw_asm = load_asm(args.asm_file)
+        asm_parser = AsmParser(raw_asm)
+    except (FileNotFoundError, AsmParseError) as e:
         print(e)
-        return
-
-    try:
-        asm_parser = AsmParser(asm)
-    except (
-            AsmDuplicateLabelError,
-            AsmInvalidInstructionError,
-            AsmInvalidRegisterError,
-            AsmInvalidSyntaxError,
-            AsmUndefinedLabelError
-    ) as e:
-        print(e)
-        return
+        return 1
 
     if args.verbose:
         verbose_output(asm_parser.instructions, asm_parser.jump_table)
     else:
         standard_output(asm_parser.instructions)
 
+    return 0
+
 
 def load_asm(asm_file: str) -> str:
-    if not Path(asm_file).exists():
-        raise FileNotFoundError(f'Error: File {asm_file} does not exist')
-
-    with open(asm_file, 'r') as f:
-        return f.read()
+    try:
+        with open(asm_file, 'r') as f:
+            return f.read()
+    except Exception as e:
+        raise FileNotFoundError(f"Error occurred while reading file:\n -> {e}")
 
 
 def standard_output(instructions: List[Instruction]) -> None:
@@ -75,4 +61,4 @@ def verbose_output(instructions: List[Instruction], targets: Dict[str, int]) -> 
 
 
 if __name__ == '__main__':
-    main()
+    exit(main())

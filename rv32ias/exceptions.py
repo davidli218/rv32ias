@@ -1,23 +1,25 @@
-class AsmInvalidSyntaxError(Exception):
+class AsmParseError(Exception):
+    error_type = 'Unknown'
+
     def __init__(self, i: int, code_space: str) -> None:
-        super().__init__(f"Syntax Error found at line {i}\n{code_space}")
+        super().__init__(f"{self.error_type} Error: found at line {i}\n{code_space}")
 
 
-class AsmDuplicateLabelError(Exception):
-    def __init__(self, i: int, code_space: str) -> None:
-        super().__init__(f"Duplicate Label found at line {i}\n{code_space}")
+class AsmInvalidSyntaxError(AsmParseError):
+    error_type = 'Syntax'
 
 
-class AsmUndefinedLabelError(Exception):
-    def __init__(self, i: int, code_space: str) -> None:
-        super().__init__(f"Undefined Label found at line {i}\n{code_space}")
+class AsmDuplicateLabelError(AsmParseError):
+    error_type = 'Duplicate Label'
 
 
-class AsmInvalidInstructionError(Exception):
-    def __init__(self, i: int, code_space: str) -> None:
-        super().__init__(f"Invalid Instruction found at line {i}\n{code_space}")
+class AsmUndefinedLabelError(AsmParseError):
+    error_type = 'Undefined Label'
 
 
-class AsmInvalidRegisterError(Exception):
-    def __init__(self, i: int, code_space: str) -> None:
-        super().__init__(f"Invalid Register found at line {i}\n{code_space}")
+class AsmInvalidInstructionError(AsmParseError):
+    error_type = 'Invalid Instruction'
+
+
+class AsmInvalidRegisterError(AsmParseError):
+    error_type = 'Invalid Register'
