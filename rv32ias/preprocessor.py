@@ -17,13 +17,16 @@ __all__ = [
 
 class AsmParser:
     def __init__(self, asm_raw: str):
-        self.__asm_raw_lines: Final[List[str]] = asm_raw.split('\n')
+        self.__raw_asm: Final[List[str]] = asm_raw.split('\n')
 
+        self.__clean_asm_: List[str] = []
+        self.__clean_asm_raw_index: List[int] = []
         self.__jump_targets: Dict[str, int] = {}
-        self.__asm_clean_lines: List[str] = []
-        self.__asm_clean_lines_raw_index: List[int] = []
         self.__parsed_instructions: List[Instruction] = []
 
+        self.__main__()
+
+    def __main__(self):
         self.__do_preprocess()
         self.__parse_asm()
         self.__validate_registers()
@@ -32,15 +35,15 @@ class AsmParser:
         if raw_index == 0:
             code_begin_index = 0
             error_line = 0
-        elif raw_index == len(self.__asm_raw_lines) - 1:
-            code_begin_index = len(self.__asm_raw_lines) - 3
+        elif raw_index == len(self.__raw_asm) - 1:
+            code_begin_index = len(self.__raw_asm) - 3
             error_line = 2
         else:
             code_begin_index = raw_index - 1
             error_line = 1
 
         code_space = []
-        for i, code in enumerate(self.__asm_raw_lines[code_begin_index:code_begin_index + 3]):
+        for i, code in enumerate(self.__raw_asm[code_begin_index:code_begin_index + 3]):
             if i == error_line:
                 label = 'err!'
                 code_space.append(f"\033[91m{label:^6} -> \033[0m{code}")
@@ -51,7 +54,7 @@ class AsmParser:
         return raw_index + 1, '\n'.join(code_space), msg
 
     def __do_preprocess(self) -> None:
-        for i, line in enumerate(self.__asm_raw_lines):
+        for i, line in enumerate(self.__raw_asm):
             # Remove comments
             line = re.sub(r'#.*', '', line)
 
@@ -78,7 +81,7 @@ class AsmParser:
                 if label in self.__jump_targets:
                     raise AsmDuplicateLabelError(*self.__build_err_context(i))
 
-                self.__jump_targets[label] = 4 * len(self.__asm_clean_lines)
+                self.__jump_targets[label] = 4 * len(self.__clean_asm_)
                 continue
 
             # Remove whitespaces around commas
@@ -88,12 +91,12 @@ class AsmParser:
             line = re.sub(r'\s*\(\s*', '(', line)
             line = re.sub(r'\s*\)', ')', line)
 
-            self.__asm_clean_lines.append(line)
-            self.__asm_clean_lines_raw_index.append(i)
+            self.__clean_asm_.append(line)
+            self.__clean_asm_raw_index.append(i)
 
     def __parse_asm(self) -> None:
-        for i, line in enumerate(self.__asm_clean_lines):
-            raw_index = self.__asm_clean_lines_raw_index[i]
+        for i, line in enumerate(self.__clean_asm_):
+            raw_index = self.__clean_asm_raw_index[i]
 
             # ! Raise when only one word in line
             try:
@@ -134,7 +137,7 @@ class AsmParser:
 
     def __validate_registers(self) -> None:
         for i, inst in enumerate(self.__parsed_instructions):
-            raw_index = self.__asm_clean_lines_raw_index[i]
+            raw_index = self.__clean_asm_raw_index[i]
             try:
                 reg_mapper(inst.rd if inst.rd is not None else 'zero')
                 reg_mapper(inst.rs1 if inst.rs1 is not None else 'zero')
