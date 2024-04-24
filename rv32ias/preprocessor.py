@@ -1,5 +1,5 @@
 import re
-from typing import List, Dict, Final
+from typing import List, Tuple, Dict, Final
 
 from rv32ias.exceptions import AsmDuplicateLabelError
 from rv32ias.exceptions import AsmInvalidInstructionError
@@ -28,7 +28,7 @@ class AsmParser:
         self.__parse_asm()
         self.__validate_registers()
 
-    def __build_err_context(self, raw_index: int) -> (int, str):
+    def __build_err_context(self, raw_index: int, msg='') -> Tuple[int, str, str]:
         if raw_index == 0:
             code_begin_index = 0
             error_line = 0
@@ -39,12 +39,16 @@ class AsmParser:
             code_begin_index = raw_index - 1
             error_line = 1
 
-        code_space = ''
+        code_space = []
         for i, code in enumerate(self.__asm_raw_lines[code_begin_index:code_begin_index + 3]):
-            label = f"{'err!' if i == error_line else str(code_begin_index + i + 1)}"
-            code_space += f'{label:^6} -> {code}\n'
+            if i == error_line:
+                label = 'err!'
+                code_space.append(f"\033[91m{label:^6} -> \033[0m{code}")
+            else:
+                label = code_begin_index + i + 1
+                code_space.append(f'\033[90m{label:^6} -> {code}\033[0m')
 
-        return raw_index + 1, code_space[:-1]
+        return raw_index + 1, '\n'.join(code_space), msg
 
     def __do_preprocess(self) -> None:
         for i, line in enumerate(self.__asm_raw_lines):
@@ -68,7 +72,8 @@ class AsmParser:
                 label = re_match.group('label')
 
                 if label[0].isdigit():
-                    raise AsmInvalidSyntaxError(*self.__build_err_context(i))
+                    error_note = 'Label cannot start with a digit'
+                    raise AsmInvalidSyntaxError(*self.__build_err_context(i, error_note))
 
                 if label in self.__jump_targets:
                     raise AsmDuplicateLabelError(*self.__build_err_context(i))
@@ -94,7 +99,8 @@ class AsmParser:
             try:
                 inst, args = line.split(maxsplit=1)
             except ValueError:
-                raise AsmInvalidSyntaxError(*self.__build_err_context(raw_index))
+                error_note = 'Incomplete instruction'
+                raise AsmInvalidSyntaxError(*self.__build_err_context(raw_index, error_note))
 
             # ! Raise when instruction not in RV32I Instruction Dictionary
             if inst not in rv32i_inst_dict:
@@ -104,7 +110,8 @@ class AsmParser:
 
             # ! Raise when instruction arguments not match
             if re_match is None:
-                raise AsmInvalidSyntaxError(*self.__build_err_context(raw_index))
+                error_note = 'Invalid instruction arguments'
+                raise AsmInvalidSyntaxError(*self.__build_err_context(raw_index, error_note))
 
             args_dict = re_match.groupdict()
 
@@ -113,7 +120,8 @@ class AsmParser:
                 try:
                     args_dict['imm'] = int(args_dict['imm'], 0)
                 except ValueError:
-                    raise AsmInvalidSyntaxError(*self.__build_err_context(raw_index))
+                    error_note = 'Invalid immediate value'
+                    raise AsmInvalidSyntaxError(*self.__build_err_context(raw_index, error_note))
 
             # Handle label
             if 'label' in args_dict:

@@ -1,8 +1,9 @@
 class AsmParseError(Exception):
     error_type = 'Unknown'
 
-    def __init__(self, i: int, code_space: str) -> None:
-        super().__init__(f"{self.error_type} Error: found at line {i}\n{code_space}")
+    def __init__(self, i: int, code_space: str, msg: str) -> None:
+        msg = f' \033[93m({msg})\033[0m' if msg else ''
+        super().__init__(f"{self.error_type} Error: found at line {i}{msg}\n{code_space}")
 
 
 class AsmInvalidSyntaxError(AsmParseError):
