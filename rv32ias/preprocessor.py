@@ -143,22 +143,6 @@ class AsmParser:
                 raise AsmInvalidRegisterError(*self.__build_err_context(raw_index))
 
     @property
-    def asm_raw(self) -> str:
-        return '\n'.join(self.__asm_raw_lines)
-
-    @property
-    def asm_clean(self) -> str:
-        output = []
-
-        for line in self.__asm_clean_lines:
-            if ':' in line:
-                output.append(f'{line}')
-            else:
-                output.append(f'    {line}')
-
-        return '\n'.join(output)
-
-    @property
     def jump_table(self) -> Dict[str, int]:
         return self.__jump_targets
 
