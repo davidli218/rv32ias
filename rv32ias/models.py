@@ -22,11 +22,18 @@ class AsmLineType(Enum):
 
 @dataclass
 class AsmLine:
+    # Line number in the original assembly code
+    idx: int
+    # Type of the line
     type: AsmLineType
+    # Raw line content from the original assembly code
     raw: str
+    # Clean line content without comments and leading/trailing whitespaces
     clean: str
+    # Offset of the clean line in the raw line
     clean_offset: int
-    im_ptr: Optional[int] = None
+    # Instruction memory pointer
+    im_ptr: int
 
     def colorize(self):
         a = self.raw[:self.clean_offset]
