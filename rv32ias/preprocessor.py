@@ -29,23 +29,22 @@ class AsmParser:
         im_ptr = 0
 
         for i, line in enumerate(asm_raw.split('\n')):
-            reduced_line = re.sub(r'^\s*|\s*$', '', line)
-            ctx_offset = line.index(reduced_line)
+            re_match = re.match(r'^\s*(?P<code>.*?)\s*(?P<comment>#.*?)?\s*$', line)
 
-            if not line:
-                asm.append(AsmLine(i, AsmLineType.EMPTY, line, reduced_line, ctx_offset, im_ptr))
-                continue
+            code, code_offset = re_match.group('code'), re_match.start('code')
+            cmt, cmt_offset = re_match.group('comment'), re_match.start('comment')
 
-            if reduced_line[0] == '#':
-                asm.append(AsmLine(i, AsmLineType.COMMENT, line, reduced_line, ctx_offset, im_ptr))
-                continue
+            if not cmt:
+                cmt, cmt_offset = None, None
 
-            reduced_line = re.sub(r'\s*#.*$', '', reduced_line)
-
-            if re.match(r'^\w+\s*:$', reduced_line):
-                asm.append(AsmLine(i, AsmLineType.LABEL, line, reduced_line, ctx_offset, im_ptr))
+            if not code and not cmt:
+                asm.append(AsmLine(i, AsmLineType.EMPTY, im_ptr, line, line, 0))
+            elif not code:
+                asm.append(AsmLine(i, AsmLineType.COMMENT, im_ptr, line, cmt, cmt_offset))
+            elif code[-1] == ':':
+                asm.append(AsmLine(i, AsmLineType.LABEL, im_ptr, line, code, code_offset, cmt, cmt_offset))
             else:
-                asm.append(AsmLine(i, AsmLineType.INSTRUCTION, line, reduced_line, ctx_offset, im_ptr))
+                asm.append(AsmLine(i, AsmLineType.INSTRUCTION, im_ptr, line, code, code_offset, cmt, cmt_offset))
                 im_ptr += 4
 
         return asm
