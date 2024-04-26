@@ -5,7 +5,7 @@ from typing import Optional
 
 @dataclass
 class Instruction:
-    line_num: int
+    idx: int
     inst: str
     rd: Optional[str] = None
     rs1: Optional[str] = None
