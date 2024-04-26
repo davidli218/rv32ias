@@ -59,32 +59,39 @@ class AsmParser:
 
         return asm
 
-    def __build_err_context(self, raw_index: int, msg='') -> Tuple[int, str, str]:
-        if raw_index == 0:
+    def __build_err_context(self, raw_i: int, e_range: tuple = None, msg='') -> Tuple[int, str, str]:
+        if raw_i == 0:
             code_begin_index = 0
             error_line = 0
-        elif raw_index == len(self.__asm) - 1:
+        elif raw_i == len(self.__asm) - 1:
             code_begin_index = len(self.__asm) - 3
             error_line = 2
         else:
-            code_begin_index = raw_index - 1
+            code_begin_index = raw_i - 1
             error_line = 1
+
+        if e_range is None:
+            e_range = (self.__asm[raw_i].clean_offset, len(self.__asm[raw_i].clean))
 
         code_space = []
         for i, code in enumerate(self.__asm[code_begin_index:code_begin_index + 3]):
             if i == error_line:
                 label = 'err!'
+                code_a = code.raw[:e_range[0]]
+                code_b = code.raw[e_range[0]:sum(e_range)]
+                code_c = code.raw[sum(e_range):]
+                code = f"{code_a}\033[93m{code_b}\033[0m{code_c}"
                 code_space.append(f"\033[91m{label:^6} -> \033[0m{code}")
             else:
                 label = code_begin_index + i + 1
                 code_space.append(f'\033[90m{label:^6} -> {code}\033[0m')
 
-        return raw_index + 1, '\n'.join(code_space), msg
+        return raw_i + 1, '\n'.join(code_space), msg
 
     def __build_jump_table(self) -> None:
         for i, line in enumerate(self.__asm):
             if line.type == AsmCodeLineType.LABEL:
-                re_match = re.match(r'^(?P<label>\w+)\s*:', line.clean)
+                re_match = re.match(r'^(?P<label>\w+)\s*:$', line.clean)
 
                 if re_match is None:
                     raise AsmInvalidSyntaxError(*self.__build_err_context(i))
@@ -92,11 +99,13 @@ class AsmParser:
                 label = re_match.group('label')
 
                 if label[0].isdigit():
+                    error_range = (line.clean_offset, len(label))
                     error_note = 'Label cannot start with a digit'
-                    raise AsmInvalidSyntaxError(*self.__build_err_context(i, error_note))
+                    raise AsmInvalidSyntaxError(*self.__build_err_context(i, error_range, error_note))
 
                 if label in self.__jump_targets:
-                    raise AsmDuplicateLabelError(*self.__build_err_context(i))
+                    error_range = (line.clean_offset, len(label))
+                    raise AsmDuplicateLabelError(*self.__build_err_context(i, error_range))
 
                 self.__jump_targets[label] = line.im_ptr
 
@@ -110,18 +119,19 @@ class AsmParser:
                 inst, args = line.clean.split(maxsplit=1)
             except ValueError:
                 error_note = 'Incomplete instruction'
-                raise AsmInvalidSyntaxError(*self.__build_err_context(i, error_note))
+                raise AsmInvalidSyntaxError(*self.__build_err_context(i, msg=error_note))
 
             # ! Raise when instruction not in RV32I Instruction Dictionary
             if inst not in rv32i_inst_dict:
-                raise AsmInvalidInstructionError(*self.__build_err_context(i))
+                error_range = (line.clean_offset, len(inst))
+                raise AsmInvalidInstructionError(*self.__build_err_context(i, error_range))
 
             re_match = re.match(rv32i_inst_dict[inst].inst_arg_re, args)
 
             # ! Raise when instruction arguments not match
             if re_match is None:
                 error_note = 'Invalid instruction arguments'
-                raise AsmInvalidSyntaxError(*self.__build_err_context(i, error_note))
+                raise AsmInvalidSyntaxError(*self.__build_err_context(i, msg=error_note))
 
             args_dict = re_match.groupdict()
 
@@ -131,7 +141,7 @@ class AsmParser:
                     args_dict['imm'] = int(args_dict['imm'], 0)
                 except ValueError:
                     error_note = 'Invalid immediate value'
-                    raise AsmInvalidSyntaxError(*self.__build_err_context(i, error_note))
+                    raise AsmInvalidSyntaxError(*self.__build_err_context(i, msg=error_note))
 
             # Handle label
             if 'label' in args_dict:
@@ -149,7 +159,7 @@ class AsmParser:
                 reg_mapper(inst.rs1 if inst.rs1 is not None else 'zero')
                 reg_mapper(inst.rs2 if inst.rs2 is not None else 'zero')
             except ValueError:
-                raise AsmInvalidRegisterError(*self.__build_err_context(i))
+                raise AsmInvalidRegisterError(*self.__build_err_context(inst.line_num))
 
     @property
     def asm(self) -> List[AsmCodeLine]:
