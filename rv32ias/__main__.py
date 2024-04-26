@@ -1,9 +1,7 @@
 import argparse
-from typing import List, Dict
 
 from rv32ias.assembler import assemble_instructions
 from rv32ias.exceptions import AsmParseError
-from rv32ias.models import Instruction
 from rv32ias.preprocessor import AsmParser
 
 
@@ -21,9 +19,9 @@ def main():
         return 1
 
     if args.verbose:
-        verbose_output(asm_parser.instructions, asm_parser.jump_table)
+        verbose_output(asm_parser)
     else:
-        standard_output(asm_parser.instructions)
+        standard_output(asm_parser)
 
     return 0
 
@@ -36,19 +34,23 @@ def load_asm(asm_file: str) -> str:
         raise FileNotFoundError(f"Error occurred while reading file:\n -> {e}")
 
 
-def standard_output(instructions: List[Instruction]) -> None:
-    for machine_code in assemble_instructions(instructions):
+def standard_output(asm_parser: AsmParser) -> None:
+    for machine_code in assemble_instructions(asm_parser.instructions):
         print(f'{machine_code:08X}')
 
 
-def verbose_output(instructions: List[Instruction], targets: Dict[str, int]) -> None:
+def verbose_output(asm_parser: AsmParser) -> None:
+    parsed_asm = asm_parser.asm
+    instructions = asm_parser.instructions
+    jump_table = asm_parser.jump_table
+
     machine_codes = assemble_instructions(instructions)
 
     add2label = {}
-    for label, addr in targets.items():
+    for label, addr in jump_table.items():
         add2label[addr] = add2label[addr] + f', {label}' if addr in add2label else label
 
-    max_asm_length = max(len(inst.asm) for inst in instructions)
+    max_asm_length = max(len(parsed_asm[inst.line_num].clean) for inst in instructions)
     max_tgt_length = max([len(target) for target in add2label.values()] + [5])
 
     print(f"{'Addr':^9} | {'Label':^{max_tgt_length}} | {'Hex':^8} | {'Bin':^32} | {'Assembly':^{max_asm_length}}")
@@ -56,7 +58,7 @@ def verbose_output(instructions: List[Instruction], targets: Dict[str, int]) -> 
     for i, instruction, machine_code in zip(range(len(instructions)), instructions, machine_codes):
         print(
             f'+{i * 4:08} | {add2label.get(i * 4, ""):^{max_tgt_length}} |'
-            f' {machine_code:08X} | {machine_code:032b} | {instruction.asm}'
+            f' {machine_code:08X} | {machine_code:032b} | {parsed_asm[instruction.line_num].clean}'
         )
 
 
