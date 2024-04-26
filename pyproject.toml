@@ -21,12 +21,25 @@ classifiers = [
 ]
 dynamic = ["version"]
 
-[tool.setuptools.dynamic]
-version = { attr = "rv32ias.__version__" }
-
 [project.scripts]
 rv32ias = "rv32ias.__main__:main"
 
 [project.urls]
 Homepage = "https://github.com/davidli218/rv32ias"
 Issues = "https://github.com/davidli218/rv32ias/issues"
+
+[tool.setuptools.dynamic]
+version = { attr = "rv32ias.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["rv32ias"]
+exclude = ["tests"]
+namespaces = false
+
+[tool.pytest.ini_options]
+addopts = "--verbose"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+source = ["rv32ias"]
