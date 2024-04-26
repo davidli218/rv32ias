@@ -19,7 +19,7 @@ __all__ = [
 
 class AsmParser:
     def __init__(self, asm_raw: str):
-        self.__asm = self.__analyze_asm(asm_raw)
+        self.__asm: List[AsmCodeLine] = self.__analyze_asm(asm_raw)
 
         self.__jump_targets: Dict[str, int] = {}
         self.__parsed_instructions: List[Instruction] = []
@@ -71,15 +71,16 @@ class AsmParser:
             error_line = 1
 
         if e_range is None:
-            e_range = (self.__asm[raw_i].clean_offset, len(self.__asm[raw_i].clean))
+            e_range = (0, len(self.__asm[raw_i].clean))
 
         code_space = []
         for i, code in enumerate(self.__asm[code_begin_index:code_begin_index + 3]):
             if i == error_line:
                 label = 'err!'
-                code_a = code.raw[:e_range[0]]
-                code_b = code.raw[e_range[0]:sum(e_range)]
-                code_c = code.raw[sum(e_range):]
+                offset = self.__asm[raw_i].clean_offset
+                code_a = code.raw[:offset + e_range[0]]
+                code_b = code.raw[offset + e_range[0]:offset + e_range[1]]
+                code_c = code.raw[offset + e_range[1]:]
                 code = f"{code_a}\033[93m{code_b}\033[0m{code_c}"
                 code_space.append(f"\033[91m{label:^6} -> \033[0m{code}")
             else:
@@ -99,12 +100,12 @@ class AsmParser:
                 label = re_match.group('label')
 
                 if label[0].isdigit():
-                    error_range = (line.clean_offset, len(label))
+                    error_range = (0, len(label))
                     error_note = 'Label cannot start with a digit'
                     raise AsmInvalidSyntaxError(*self.__build_err_context(i, error_range, error_note))
 
                 if label in self.__jump_targets:
-                    error_range = (line.clean_offset, len(label))
+                    error_range = (0, len(label))
                     raise AsmDuplicateLabelError(*self.__build_err_context(i, error_range))
 
                 self.__jump_targets[label] = line.im_ptr
@@ -123,7 +124,7 @@ class AsmParser:
 
             # ! Raise when instruction not in RV32I Instruction Dictionary
             if inst not in rv32i_inst_dict:
-                error_range = (line.clean_offset, len(inst))
+                error_range = (0, len(inst))
                 raise AsmInvalidInstructionError(*self.__build_err_context(i, error_range))
 
             re_match = re.match(rv32i_inst_dict[inst].inst_arg_re, args)
