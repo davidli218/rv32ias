@@ -63,21 +63,21 @@ class AsmParser:
         if raw_i == 0:
             code_begin_index = 0
             error_line = 0
-        elif raw_i == len(self.__asm) - 1:
-            code_begin_index = len(self.__asm) - 3
+        elif raw_i == len(self.asm) - 1:
+            code_begin_index = len(self.asm) - 3
             error_line = 2
         else:
             code_begin_index = raw_i - 1
             error_line = 1
 
         if e_range is None:
-            e_range = (0, len(self.__asm[raw_i].clean))
+            e_range = (0, len(self.asm[raw_i].clean))
 
         code_space = []
-        for i, code in enumerate(self.__asm[code_begin_index:code_begin_index + 3]):
+        for i, code in enumerate(self.asm[code_begin_index:code_begin_index + 3]):
             if i == error_line:
                 label = 'err!'
-                offset = self.__asm[raw_i].clean_offset
+                offset = self.asm[raw_i].clean_offset
                 code_a = code.raw[:offset + e_range[0]]
                 code_b = code.raw[offset + e_range[0]:offset + e_range[1]]
                 code_c = code.raw[offset + e_range[1]:]
@@ -90,7 +90,7 @@ class AsmParser:
         return raw_i + 1, '\n'.join(code_space), msg
 
     def __build_jump_table(self) -> None:
-        for i, line in enumerate(self.__asm):
+        for i, line in enumerate(self.asm):
             if line.type == AsmLineType.LABEL:
                 re_match = re.match(r'^(?P<label>\w+)\s*:$', line.clean)
 
@@ -111,7 +111,7 @@ class AsmParser:
                 self.__jump_targets[label] = line.im_ptr
 
     def __parse_asm(self) -> None:
-        for i, line in enumerate(self.__asm):
+        for i, line in enumerate(self.asm):
             if line.type != AsmLineType.INSTRUCTION:
                 continue
 
