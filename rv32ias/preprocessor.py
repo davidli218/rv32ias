@@ -8,8 +8,8 @@ from rv32ias.exceptions import AsmInvalidSyntaxError
 from rv32ias.exceptions import AsmUndefinedLabelError
 from rv32ias.isa import reg_mapper
 from rv32ias.isa import rv32i_inst_dict
-from rv32ias.models import AsmCodeLine
-from rv32ias.models import AsmCodeLineType
+from rv32ias.models import AsmLine
+from rv32ias.models import AsmLineType
 from rv32ias.models import Instruction
 
 __all__ = [
@@ -19,7 +19,7 @@ __all__ = [
 
 class AsmParser:
     def __init__(self, asm_raw: str):
-        self.__asm: List[AsmCodeLine] = self.__analyze_asm(asm_raw)
+        self.__asm: List[AsmLine] = self.__analyze_asm(asm_raw)
 
         self.__jump_targets: Dict[str, int] = {}
         self.__parsed_instructions: List[Instruction] = []
@@ -29,7 +29,7 @@ class AsmParser:
         self.__validate_registers()
 
     @staticmethod
-    def __analyze_asm(asm_raw: str) -> List[AsmCodeLine]:
+    def __analyze_asm(asm_raw: str) -> List[AsmLine]:
         asm = []
         im_ptr = 0
 
@@ -37,19 +37,19 @@ class AsmParser:
             reduced_line = re.sub(r'^\s*|\s*$', '', line)
 
             if not line:
-                asm.append(AsmCodeLine(AsmCodeLineType.EMPTY, line, reduced_line, 0))
+                asm.append(AsmLine(AsmLineType.EMPTY, line, reduced_line, 0))
                 continue
 
             if reduced_line[0] == '#':
-                asm.append(AsmCodeLine(AsmCodeLineType.COMMENT, line, reduced_line, line.index(reduced_line)))
+                asm.append(AsmLine(AsmLineType.COMMENT, line, reduced_line, line.index(reduced_line)))
                 continue
 
             reduced_line = re.sub(r'#.*', '', reduced_line)
             reduced_line = re.sub(r'^\s*|\s*$', '', reduced_line)
 
             asm.append(
-                AsmCodeLine(
-                    AsmCodeLineType.LABEL if ':' in reduced_line else AsmCodeLineType.INSTRUCTION,
+                AsmLine(
+                    AsmLineType.LABEL if ':' in reduced_line else AsmLineType.INSTRUCTION,
                     line, reduced_line, line.index(reduced_line), im_ptr
                 )
             )
@@ -91,7 +91,7 @@ class AsmParser:
 
     def __build_jump_table(self) -> None:
         for i, line in enumerate(self.__asm):
-            if line.type == AsmCodeLineType.LABEL:
+            if line.type == AsmLineType.LABEL:
                 re_match = re.match(r'^(?P<label>\w+)\s*:$', line.clean)
 
                 if re_match is None:
@@ -112,7 +112,7 @@ class AsmParser:
 
     def __parse_asm(self) -> None:
         for i, line in enumerate(self.__asm):
-            if line.type != AsmCodeLineType.INSTRUCTION:
+            if line.type != AsmLineType.INSTRUCTION:
                 continue
 
             # ! Raise when only one word in line
@@ -163,7 +163,7 @@ class AsmParser:
                 raise AsmInvalidRegisterError(*self.__build_err_context(inst.line_num))
 
     @property
-    def asm(self) -> List[AsmCodeLine]:
+    def asm(self) -> List[AsmLine]:
         return self.__asm
 
     @property

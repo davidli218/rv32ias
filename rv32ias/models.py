@@ -13,7 +13,7 @@ class Instruction:
     imm: Optional[int] = None
 
 
-class AsmCodeLineType(Enum):
+class AsmLineType(Enum):
     EMPTY = 'EMPTY'
     COMMENT = 'COMMENT'
     LABEL = 'LABEL'
@@ -21,8 +21,8 @@ class AsmCodeLineType(Enum):
 
 
 @dataclass
-class AsmCodeLine:
-    type: AsmCodeLineType
+class AsmLine:
+    type: AsmLineType
     raw: str
     clean: str
     clean_offset: int
@@ -34,11 +34,11 @@ class AsmCodeLine:
         c = self.raw[self.clean_offset + len(self.clean):]
 
         match self.type:
-            case AsmCodeLineType.EMPTY | AsmCodeLineType.COMMENT:
+            case AsmLineType.EMPTY | AsmLineType.COMMENT:
                 return self.raw
-            case AsmCodeLineType.LABEL:
+            case AsmLineType.LABEL:
                 return f'{a}\033[44m{b}\033[0m{c}'
-            case AsmCodeLineType.INSTRUCTION:
+            case AsmLineType.INSTRUCTION:
                 return f'{a}\033[42m{b}\033[0m{c}'
 
     def __str__(self):
