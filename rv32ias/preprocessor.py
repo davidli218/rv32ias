@@ -79,9 +79,9 @@ class AsmParser:
                 label = 'err!'
                 offset = self.asm[raw_i].clean_offset
                 code_a = code.raw[:offset + e_range[0]]
-                code_b = code.raw[offset + e_range[0]:offset + e_range[1]]
-                code_c = code.raw[offset + e_range[1]:]
-                code = f"{code_a}\033[93m{code_b}\033[0m{code_c}"
+                code_b = code.raw[offset + e_range[0]:offset + sum(e_range)]
+                code_c = code.raw[offset + sum(e_range):]
+                code = f"{code_a}\033[43m{code_b}\033[0m{code_c}"
                 code_space.append(f"\033[91m{label:^6} -> \033[0m{code}")
             else:
                 label = code_begin_index + i + 1
@@ -128,11 +128,13 @@ class AsmParser:
                 raise AsmInvalidInstructionError(*self.__build_err_context(i, error_range))
 
             re_match = re.match(rv32i_inst_dict[inst].inst_arg_re, args)
+            args_offset = line.clean.index(args)
 
             # ! Raise when instruction arguments not match
             if re_match is None:
+                error_range = (args_offset, len(args))
                 error_note = 'Invalid instruction arguments'
-                raise AsmInvalidSyntaxError(*self.__build_err_context(i, msg=error_note))
+                raise AsmInvalidSyntaxError(*self.__build_err_context(i, error_range, error_note))
 
             args_dict = re_match.groupdict()
 
@@ -141,15 +143,17 @@ class AsmParser:
                 try:
                     args_dict['imm'] = int(args_dict['imm'], 0)
                 except ValueError:
+                    error_range = (args_offset + args.index(args_dict['imm']), len(args_dict['imm']))
                     error_note = 'Invalid immediate value'
-                    raise AsmInvalidSyntaxError(*self.__build_err_context(i, msg=error_note))
+                    raise AsmInvalidSyntaxError(*self.__build_err_context(i, error_range, error_note))
 
             # Handle label
             if 'label' in args_dict:
                 if (label := args_dict.pop('label')) in self.__jump_targets:
                     args_dict['imm'] = self.__jump_targets[label] - line.im_ptr
                 else:
-                    raise AsmUndefinedLabelError(*self.__build_err_context(i))
+                    error_range = (args_offset + args.index(label), len(label))
+                    raise AsmUndefinedLabelError(*self.__build_err_context(i, error_range))
 
             self.__parsed_instructions.append(Instruction(line_num=i, inst=inst, **args_dict))
 
