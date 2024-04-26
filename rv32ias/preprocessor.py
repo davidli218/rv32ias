@@ -26,7 +26,6 @@ class AsmParser:
 
         self.__build_jump_table()
         self.__parse_asm()
-        self.__validate_registers()
 
     @staticmethod
     def __analyze_asm(asm_raw: str) -> List[AsmLine]:
@@ -155,16 +154,16 @@ class AsmParser:
                     error_range = (args_offset + args.index(label), len(label))
                     raise AsmUndefinedLabelError(*self.__build_err_context(i, error_range))
 
-            self.__parsed_instructions.append(Instruction(line_num=i, inst=inst, **args_dict))
+            # ! Raise when invalid register
+            for reg_name in ['rd', 'rs1', 'rs2']:
+                if reg_name in args_dict:
+                    try:
+                        reg_mapper(args_dict[reg_name])
+                    except ValueError:
+                        error_range = (args_offset + args.index(args_dict[reg_name]), len(args_dict[reg_name]))
+                        raise AsmInvalidRegisterError(*self.__build_err_context(i, error_range))
 
-    def __validate_registers(self) -> None:
-        for i, inst in enumerate(self.__parsed_instructions):
-            try:
-                reg_mapper(inst.rd if inst.rd is not None else 'zero')
-                reg_mapper(inst.rs1 if inst.rs1 is not None else 'zero')
-                reg_mapper(inst.rs2 if inst.rs2 is not None else 'zero')
-            except ValueError:
-                raise AsmInvalidRegisterError(*self.__build_err_context(inst.line_num))
+            self.__parsed_instructions.append(Instruction(line_num=i, inst=inst, **args_dict))
 
     @property
     def asm(self) -> List[AsmLine]:
