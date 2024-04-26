@@ -61,13 +61,13 @@ class AsmParser:
             error_line = 1
 
         if span is None:
-            span = (0, len(self.asm[raw_i].clean))
+            span = (0, len(self.asm[raw_i].body))
 
         code_space = []
         for i, code in enumerate(self.asm[code_begin_index:code_begin_index + 3]):
             if i == error_line:
                 label = 'err!'
-                offset = self.asm[raw_i].clean_offset
+                offset = self.asm[raw_i].body_offset
                 code_a = code.raw[:offset + span[0]]
                 code_b = code.raw[offset + span[0]:offset + sum(span)]
                 code_c = code.raw[offset + sum(span):]
@@ -81,7 +81,7 @@ class AsmParser:
 
     def __build_jump_table(self) -> None:
         for line in (i for i in self.asm if i.type == AsmLineType.LABEL):
-            label = line.clean[:-1]
+            label = line.body[:-1]
 
             if not label[0].isalpha():
                 span, note = (0, len(label)), 'Label must start with alphabet'
@@ -97,7 +97,7 @@ class AsmParser:
         for line in (i for i in self.asm if i.type == AsmLineType.INSTRUCTION):
             # ! Raise when only one word in line
             try:
-                inst, args = line.clean.split(maxsplit=1)
+                inst, args = line.body.split(maxsplit=1)
             except ValueError:
                 raise AsmInvalidSyntaxError(*self.__build_err_ctx(line.idx, note='Incomplete instruction'))
 
@@ -107,7 +107,7 @@ class AsmParser:
                 raise AsmInvalidInstructionError(*self.__build_err_ctx(line.idx, span, note))
 
             re_match = re.match(rv32i_inst_dict[inst].inst_arg_re, args)
-            args_offset = line.clean.index(args)
+            args_offset = line.body.index(args)
 
             # ! Raise when instruction arguments not match
             if re_match is None:

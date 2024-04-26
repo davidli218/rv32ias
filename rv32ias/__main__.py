@@ -50,7 +50,7 @@ def verbose_output(asm_parser: AsmParser) -> None:
     for label, addr in jump_table.items():
         add2label[addr] = add2label[addr] + f', {label}' if addr in add2label else label
 
-    max_asm_length = max(len(parsed_asm[inst.idx].clean) for inst in instructions)
+    max_asm_length = max(len(parsed_asm[inst.idx].body) for inst in instructions)
     max_tgt_length = max([len(target) for target in add2label.values()] + [5])
 
     print(f"{'Addr':^9} | {'Label':^{max_tgt_length}} | {'Hex':^8} | {'Bin':^32} | {'Assembly':^{max_asm_length}}")
@@ -58,7 +58,7 @@ def verbose_output(asm_parser: AsmParser) -> None:
     for i, instruction, machine_code in zip(range(len(instructions)), instructions, machine_codes):
         print(
             f'+{i * 4:08} | {add2label.get(i * 4, ""):^{max_tgt_length}} |'
-            f' {machine_code:08X} | {machine_code:032b} | {parsed_asm[instruction.idx].clean}'
+            f' {machine_code:08X} | {machine_code:032b} | {parsed_asm[instruction.idx].body}'
         )
 
 

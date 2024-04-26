@@ -31,9 +31,9 @@ class AsmLine:
     # Raw line content from the original assembly code
     raw: str
     # Clean line content without comments and leading/trailing whitespaces
-    clean: str
+    body: str
     # Offset of the clean line in the raw line
-    clean_offset: int
+    body_offset: int
     # Tailing comment
     tc: Optional[str] = None
     # Tailing comment offset
@@ -44,20 +44,20 @@ class AsmLine:
             case AsmLineType.EMPTY:
                 return f'\033[41m{self.raw}\033[0m'
             case AsmLineType.COMMENT:
-                a = self.raw[:self.clean_offset]
-                b = self.raw[self.clean_offset:self.clean_offset + len(self.clean)]
-                c = self.raw[self.clean_offset + len(self.clean):]
+                a = self.raw[:self.body_offset]
+                b = self.raw[self.body_offset:self.body_offset + len(self.body)]
+                c = self.raw[self.body_offset + len(self.body):]
                 return f'\033[45m{a}\033[47m{b}\033[41m{c}\033[0m'
             case AsmLineType.LABEL | AsmLineType.INSTRUCTION:
-                a = self.raw[:self.clean_offset]
-                b = self.raw[self.clean_offset:self.clean_offset + len(self.clean)]
+                a = self.raw[:self.body_offset]
+                b = self.raw[self.body_offset:self.body_offset + len(self.body)]
                 if self.tc:
-                    c = self.raw[self.clean_offset + len(self.clean):self.tc_offset]
+                    c = self.raw[self.body_offset + len(self.body):self.tc_offset]
                     d = self.raw[self.tc_offset:self.tc_offset + len(self.tc)]
                     e = self.raw[self.tc_offset + len(self.tc):]
                     return f'\033[45m{a}\033[44m{b}\033[45m{c}\033[47m{d}\033[41m{e}\033[0m'
                 else:
-                    c = self.raw[self.clean_offset + len(self.clean):]
+                    c = self.raw[self.body_offset + len(self.body):]
                     return f'\033[45m{a}\033[44m{b}\033[41m{c}\033[0m'
 
     def __str__(self):
