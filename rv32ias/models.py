@@ -40,26 +40,30 @@ class AsmLine:
     tc_offset: Optional[int] = None
 
     def colorize(self):
-        match self.type:
-            case AsmLineType.EMPTY:
-                return f'\033[41m{self.raw}\033[0m'
-            case AsmLineType.COMMENT:
-                a = self.raw[:self.body_offset]
-                b = self.raw[self.body_offset:self.body_offset + len(self.body)]
-                c = self.raw[self.body_offset + len(self.body):]
-                return f'\033[45m{a}\033[47m{b}\033[41m{c}\033[0m'
-            case AsmLineType.LABEL | AsmLineType.INSTRUCTION:
-                color = '\033[44m' if self.type == AsmLineType.LABEL else '\033[42m'
-                a = self.raw[:self.body_offset]
-                b = self.raw[self.body_offset:self.body_offset + len(self.body)]
-                if self.tc:
-                    c = self.raw[self.body_offset + len(self.body):self.tc_offset]
-                    d = self.raw[self.tc_offset:self.tc_offset + len(self.tc)]
-                    e = self.raw[self.tc_offset + len(self.tc):]
-                    return f'\033[45m{a}{color}{b}\033[45m{c}\033[47m{d}\033[41m{e}\033[0m'
-                else:
-                    c = self.raw[self.body_offset + len(self.body):]
-                    return f'\033[45m{a}{color}{b}\033[41m{c}\033[0m'
+        z, red, green, yellow, blue, magenta, cyan, white = (
+            '\033[0m', '\033[41m', '\033[42m', '\033[43m', '\033[44m', '\033[45m', '\033[46m', '\033[47m'
+        )
+
+        if self.type == AsmLineType.EMPTY:
+            return f'{red}{self.raw}{z}'
+
+        p1 = self.raw[:self.body_offset]
+        p2 = self.raw[self.body_offset:self.body_offset + len(self.body)]
+
+        main_color = (
+            magenta if self.type == AsmLineType.LABEL else
+            green if self.type == AsmLineType.INSTRUCTION else
+            cyan
+        )
+
+        if not self.tc:
+            p3 = self.raw[self.body_offset + len(self.body):]
+            return f'{white}{p1}{main_color}{p2}{red}{p3}{z}'
+        else:
+            p3 = self.raw[self.body_offset + len(self.body):self.tc_offset]
+            p4 = self.raw[self.tc_offset:self.tc_offset + len(self.tc)]
+            p5 = self.raw[self.tc_offset + len(self.tc):]
+            return f'{white}{p1}{main_color}{p2}{white}{p3}{cyan}{p4}{red}{p5}{z}'
 
     def __str__(self):
         return self.raw
