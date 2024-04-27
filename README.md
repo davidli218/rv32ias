@@ -15,15 +15,24 @@ pip install git+https://github.com/davidli218/rv32ias.git
 ## Usage
 
 ```
-rv32ias [-h] [--verbose] asm_file
+rv32ias [-h] [--binary] [--output OUTPUT]
+        [--verbose] [--pretty PRETTY]
+        asm_file
 
 positional arguments:
-  asm_file       Assembly file to be assembled
+  asm_file              Assembly file to be assembled
 
 options:
-  -h, --help     show help message and exit
-  --verbose, -v  Print verbose output
+  -h, --help            show this help message and exit
+  --binary, -b          Output binary instead of hex
+  --output OUTPUT, -o OUTPUT
+                        Save output to a file
+  --verbose, -v         Print verbose output
+  --pretty PRETTY, -p PRETTY
+                        Pretty print verbose output
 ```
+
+
 
 ### Examples
 
