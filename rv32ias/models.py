@@ -39,13 +39,14 @@ class AsmLine:
     # Tailing comment offset
     tc_offset: Optional[int] = None
 
-    def colorize(self):
-        z, red, green, yellow, blue, magenta, cyan, white = (
-            '\033[0m', '\033[41m', '\033[42m', '\033[43m', '\033[44m', '\033[45m', '\033[46m', '\033[47m'
+    def colorize(self, lens: int = None) -> str:
+        z, black, red, green, yellow, blue, magenta, cyan, white = (
+            '\033[0m', '\033[40m', '\033[41m', '\033[42m', '\033[43m', '\033[44m', '\033[45m', '\033[46m', '\033[47m'
         )
 
         if self.type == AsmLineType.EMPTY:
-            return f'{red}{self.raw}{z}'
+            base = f'{red}{self.raw}{z}'
+            return f'{base}{black}{" " * (lens - len(self.raw))}{z}' if lens else base
 
         p1 = self.raw[:self.body_offset]
         p2 = self.raw[self.body_offset:self.body_offset + len(self.body)]
@@ -58,12 +59,14 @@ class AsmLine:
 
         if not self.tc:
             p3 = self.raw[self.body_offset + len(self.body):]
-            return f'{white}{p1}{main_color}{p2}{red}{p3}{z}'
+            base = f'{white}{p1}{main_color}{p2}{red}{p3}{z}'
         else:
             p3 = self.raw[self.body_offset + len(self.body):self.tc_offset]
             p4 = self.raw[self.tc_offset:self.tc_offset + len(self.tc)]
             p5 = self.raw[self.tc_offset + len(self.tc):]
-            return f'{white}{p1}{main_color}{p2}{white}{p3}{cyan}{p4}{red}{p5}{z}'
+            base = f'{white}{p1}{main_color}{p2}{white}{p3}{cyan}{p4}{red}{p5}{z}'
+
+        return f'{base}{black}{" " * (lens - len(self.raw))}{z}' if lens else base
 
     def __str__(self):
         return self.raw

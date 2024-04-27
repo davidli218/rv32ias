@@ -94,7 +94,7 @@ def verbose_output(asm_parser: AsmParser, pretty: str) -> None:
             )
 
         print(
-            line.colorize() if pretty == 'rainbow' else
+            line.colorize(max_asm_length) if pretty == 'rainbow' else
             line.raw if pretty == 'full' else
             line.body
         )
