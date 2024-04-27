@@ -11,7 +11,7 @@ def main():
     parser.add_argument('--verbose', '-v', action='store_true', help='Print verbose output')
     parser.add_argument('--pretty', '-p', type=str, help='Pretty print verbose output')
     parser.add_argument('--binary', '-b', action='store_true', help='Output binary instead of hex')
-    parser.add_argument('--output', '-o', type=str, help='Output file to write to')
+    parser.add_argument('--output', '-o', type=str, help='Save output to a file')
 
     args = parser.parse_args()
 
