@@ -61,45 +61,43 @@ def standard_output(asm_parser: AsmParser, binary: bool, output: str) -> None:
 
 
 def verbose_output(asm_parser: AsmParser, pretty: str) -> None:
-    parsed_asm = asm_parser.asm
-    instructions = asm_parser.instructions
-    jump_table = asm_parser.jump_table
+    asm = asm_parser.asm
 
-    machine_codes = assemble_instructions(instructions)
+    # Build a mapping from instruction index to machine code
+    machine_codes = {inst.idx: mc for inst, mc in zip(
+        asm_parser.instructions, assemble_instructions(asm_parser.instructions)
+    )}
 
-    add2label = {}
-    for label, addr in jump_table.items():
-        add2label[addr] = add2label[addr] + f', {label}' if addr in add2label else label
+    # Build a mapping from instruction memory address to jump label
+    jump_table = {}
+    for label, addr in asm_parser.jump_table.items():
+        jump_table[addr] = jump_table[addr] + f', {label}' if addr in jump_table else label
 
-    add2mc = {inst.idx: mc for inst, mc in zip(instructions, machine_codes)}
+    # Calculate pretty print lengths
+    max_asm_length = max(len(asm[idx].raw) if pretty else len(asm[idx].body) for idx in machine_codes)
+    max_tgt_length = max([len(target) for target in jump_table.values()] + [5])
 
-    max_asm_length = max(
-        len(parsed_asm[inst.idx].raw) if pretty else len(parsed_asm[inst.idx].body) for inst in instructions
-    )
-    max_tgt_length = max([len(target) for target in add2label.values()] + [5])
-
+    # Print the header
     print(f"{'Addr':^9} | {'Label':^{max_tgt_length}} | {'Hex':^8} | {'Bin':^32} | {'Assembly':^{max_asm_length}}")
     print(f"{'-' * 9} | {'-' * max_tgt_length} | {'-' * 8} | {'-' * 32} | {'-' * max_asm_length}")
-    for line in parsed_asm:
-        if not pretty and (line.idx not in add2mc):
+
+    for line in asm:
+        if not pretty and line.idx not in machine_codes:
             continue
 
-        if line.idx not in add2mc:
+        if line.idx not in machine_codes:
             print(f'{"*":^9} | {"":^{max_tgt_length}} | {"*":^8} | {"*":^32} | ', end='')
         else:
-            machine_code = add2mc[line.idx]
             print(
-                f'+{line.idx * 4:08} | {add2label.get(line.im_ptr, ""):^{max_tgt_length}} |'
-                f' {machine_code:08X} | {machine_code:032b} | ', end=''
+                f'+{line.idx * 4:08} | {jump_table.get(line.im_ptr, ""):^{max_tgt_length}} |'
+                f' {machine_codes[line.idx]:08X} | {machine_codes[line.idx]:032b} | ', end=''
             )
 
-        match pretty:
-            case 'rainbow':
-                print(line.colorize())
-            case 'full':
-                print(line)
-            case _:
-                print(line.body)
+        print(
+            line.colorize() if pretty == 'rainbow' else
+            line.raw if pretty == 'full' else
+            line.body
+        )
 
 
 if __name__ == '__main__':
